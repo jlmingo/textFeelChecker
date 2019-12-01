@@ -2,9 +2,10 @@
 
 import requests
 from bottle import route, run, post, request
-from functions import connection
+from functions import connection, updateParticipants
 from bson.json_util import dumps
-
+from bson import ObjectId
+import pymongo
 
 @route('/data')
 def data():
@@ -23,18 +24,23 @@ def newUser():
 
 @post('/chat/create')
 def chatCreate():
-    participants = list(request.forms.get("participants"))
-    new_id = max(collection.distinct("idChat")) + 1
-    new_chat = {
-        "idChat": new_id,
-        "Participants": participants
-    }
-    collection.insert_one(new_chat)
+    participants = list(request.forms.getlist("partic"))
+    participants = [int(e) for e in participants]
+    if set(participants).issubset(set(collection.distinct("idUser"))):
+        new_id = max(collection.distinct("idChat")) + 1
+        new_chat = {
+            "idChat": new_id,
+            "Participants": participants
+        }
+        collection.insert_one(new_chat)
+        updateParticipants(collection)
+    else:
+        return {"Error": "Please input existing users."}
     # return dumps(idChat)
 
 # @post("/chat/<chat_id>/addmessage")
 # def addMessage():
-#     participants = list(request.forms.get("participants"))
+#     participants = lst(request.forms.get("participants"))
 #     new_id = max(collection.distinct("idChat")) + 1
 #     new_chat = {
 #         "idChat": new_id,
