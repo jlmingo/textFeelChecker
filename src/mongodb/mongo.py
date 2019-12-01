@@ -21,3 +21,9 @@ db, coll = connectCollection('datamad1019','chats')
 query = {'idChat':0}
 test_query = coll.find(query)
 print(list(test_query))
+
+
+# Add field
+df=pd.DataFrame(list(coll.find({})))
+df["Participants"] = df.idChat.apply(lambda x: list(df[df.idChat == x].idUser.unique()))
+coll.update({"_id": b["_id"]}, {"$set": {"geolocCountry": myGeolocCountry}})
