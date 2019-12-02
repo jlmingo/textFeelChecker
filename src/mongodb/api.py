@@ -8,6 +8,12 @@ from bson import ObjectId
 import pymongo
 import datetime
 from textblob import TextBlob
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity as distance
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from bottle import static_file
 
 @route('/data')
 def data():
@@ -69,22 +75,53 @@ def addMessage():
 @route('/chat/sentiment')
 def sentiment():
     chat_id = int(request.forms.get("chat_id"))
-    sentiment = {}
-    messages = list(collection.find({"idChat": chat_id}, {"idMessage": 1, "text": 1, "_id":0}))
-    for one_message in messages:
-        sentiment[one_mesage["idMessage"]] = {
-            "text": [one_message][""]
-        }
+    # sentiment = {}
+    # messages = list(collection.find({"idChat": chat_id}, {"idMessage": 1, "text": 1, "_id":0, "Sentiment":1}))
+    # for one_message in messages:
+    #     sentiment[one_mesage["idMessage"]] = {
+    #         "text": [one_message][""]
+    #     }
+    updateSentiment(collection)
     return dumps(collection.find({"idChat": chat_id}))
+
+@route('/user/recommend')
+def sentiment():
+    user_id = str(request.forms.get("user_id"))
+    unique_users = collection.distinct("idUser")
+    dict_users = {}
+    for user in unique_users:
+        try:
+            dict_users[str(user)] = " ".join([e["text"] for e in list(collection.find({"idUser": user}, {"text": 1, "_id":0}))])
+        except:
+            pass
+    count_vectorizer = CountVectorizer()
+    sparse_matrix = count_vectorizer.fit_transform(dict_users.values())
+    doc_term_matrix = sparse_matrix.todense()
+    df = pd.DataFrame(doc_term_matrix, 
+                    columns=count_vectorizer.get_feature_names(), 
+                    index=dict_users.keys())
+    similarity_matrix = distance(df, df)
+    sim_df = pd.DataFrame(similarity_matrix, columns=dict_users.keys(), index=dict_users.keys())
+    recommendation = list(sim_df.sort_values(by=[user_id]).index[0:3])
+    return {"recommendation": recommendation}
+
 
 database, collection = connect('datamad1019','chats')
 run(host='localhost', port=8080, debug=True)
 
-
-# - (POST) `/chat/<chat_id>/addmessage` 
-#   - **Purpose:** Add a message to the conversation. 
-# Help: Before adding the chat message to the database, check that the incoming user is part of this chat id. If not, raise an exception.
-#   - **Params:**
-#     - `chat_id`: Chat to store message
-#     - `user_id`: the user that writes the message
-#     - `text`: Message text
+# To be implemented
+# @route('/plot/users')
+# def server_static():
+#     dic = list(collection.find({"idChat": 0},{"Sentiment":1, "_id":0, "userName": 1}))
+#     polarity = [e["Sentiment"][0] for e in dic]
+#     subjectivity = [e["Sentiment"][1] for e in dic]
+#     labels = [e["userName"] for e in dic]
+#     df = pd.DataFrame(list(zip(subjectivity, polarity)), columns=["subjectivity", "polarity"])
+#     sns.set()
+#     cmap = sns.cubehelix_palette(rot=-.2, as_cmap=True)
+#     fig, ax = plt.subplots(figsize=(8,5))
+#     ax = sns.scatterplot(x="polarity", y="subjectivity", size="subjectivity", hue="polarity",
+#                         palette=cmap, sizes=(80, 200),
+#                         data=df, legend="brief")
+#     fig.savefig("output.png")
+#     return static_file("output.png", root=f'./output.png')
