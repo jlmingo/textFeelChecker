@@ -67,4 +67,4 @@ Following improvements to be implemented are:
  2) Deploying the API in Docker / Heroku
  3) Getting bubble chart. There is a function to get a bubble chart that shows the feeling of several users. Positive comments are at the right and have a darker colour, while more subjective comments increase with y axis and are bigger in size. It was not possible to send it by request this time, but this is a point to implement, as well as selecting the chart by user, chat, and so on.
 
-![Image](https://github.com/jlmingo/textFeelChecker/tree/master/src/mongodb/output.png)
+![Image](https://raw.githubusercontent.com/jlmingo/textFeelChecker/master/src/mongodb/output.png)
