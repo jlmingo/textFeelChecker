@@ -109,9 +109,8 @@ def sentiment():
 database, collection = connect('datamad1019','chats')
 run(host='localhost', port=8080, debug=True)
 
-# To be implemented
 # @route('/plot/users')
-# def server_static():
+# def server_static(filename="output.png"):
 #     dic = list(collection.find({"idChat": 0},{"Sentiment":1, "_id":0, "userName": 1}))
 #     polarity = [e["Sentiment"][0] for e in dic]
 #     subjectivity = [e["Sentiment"][1] for e in dic]
@@ -124,4 +123,4 @@ run(host='localhost', port=8080, debug=True)
 #                         palette=cmap, sizes=(80, 200),
 #                         data=df, legend="brief")
 #     fig.savefig("output.png")
-#     return static_file("output.png", root=f'./output.png')
+#     return  static_file(filename, root='./')
